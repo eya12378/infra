@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "user.fullname" . }}
+  labels:
+    app: {{ include "user.name" . }}
+spec:
+  replicas: {{ .Values.replicas | default 2 }}
+  selector:
+    matchLabels:
+      app: {{ include "user.name" . }}
+  strategy:
+    canary:
+      canaryService: {{ include "user.fullname" . }}-canary
+      stableService: {{ include "user.fullname" . }}-stable
+      trafficRouting:
+        # if using ingress-nginx:
+        nginx: {}
+      steps:
+        - setWeight: {{ .Values.canary.firstWeight | default 10 }}
+        - pause: { duration: 60 }   # watch metrics/Grafana
+        - setWeight: {{ .Values.canary.secondWeight | default 50 }}
+        - pause: { duration: 60 }
+        - setWeight: 100
+  template:
+    metadata:
+      labels:
+        app: {{ include "user.name" . }}
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: APP_VERSION
+              value: "{{ .Values.image.tag }}"
+            - name: COLOR
+              value: "{{ .Values.color | default "blue" }}"
+          ports:
+            - name: http
+              containerPort: 5000
+          readinessProbe:
+            httpGet: { path: "/", port: 5000 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: "/", port: 5000 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
