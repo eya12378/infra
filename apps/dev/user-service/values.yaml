@@ -1,0 +1,10 @@
+image:
+  repository: docker.io/youruser/user-service
+  tag: "1"   # Jenkins bumps this number via PR
+
+replicas: 2
+color: "green"
+
+canary:
+  firstWeight: 10
+  secondWeight: 50
