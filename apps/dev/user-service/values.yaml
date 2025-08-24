@@ -1,6 +1,6 @@
 image:
   repository: docker.io/youruser/user-service
-  tag: "1"   # Jenkins bumps this number via PR
+  tag:12
 
 replicas: 2
 color: "green"
