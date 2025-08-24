@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "user.fullname" . }}-sm
+  labels:
+    release: kube-prom-stack
+spec:
+  selector:
+    matchLabels:
+      app: {{ include "user.name" . }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
